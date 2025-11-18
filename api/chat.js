@@ -17,12 +17,13 @@ export default async function handler(req, res) {
     const { messages, userId, sessionId } = req.body;
     const lastMessage = messages[messages.length - 1];
     
-    // Salvează în tăcere (fără să zică utilizatorului)
+    // Salvează întrebarea ÎN TĂCERE (cu asked_at)
     try {
       await supabase.from('unanswered_questions').insert({
         question: lastMessage.content,
         user_id: userId || null,
         session_id: sessionId || `anon-${Date.now()}`,
+        asked_at: new Date().toISOString(),
         answered: false,
         added_to_kb: false
       });
@@ -30,7 +31,7 @@ export default async function handler(req, res) {
       console.error('Save error:', err);
     }
     
-    // Răspuns normal (nu zice că a salvat)
+    // Răspuns normal (fără să zică că a salvat)
     const response = {
       choices: [{
         message: {
