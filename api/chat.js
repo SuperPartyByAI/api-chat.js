@@ -10,16 +10,18 @@ export default async function handler(req, res) {
     const { messages } = req.body;
     const lastMessage = messages[messages.length - 1];
     
-    // Simple response pentru teste
+    // Format compatibil cu OpenAI/Claude
     const response = {
-      content: [{
-        type: 'text',
-        text: `Bună! Am primit mesajul tău: "${lastMessage.content}"\n\nMomentán funcționez în modul de test. Pentru răspunsuri AI complete, vei avea nevoie de un API key de la Claude sau OpenAI când Cloudflare se repară în București.`
+      choices: [{
+        message: {
+          content: `Bună! Am primit mesajul tău: "${lastMessage.content}"\n\n✅ Backend-ul funcționează!\n\n💡 Momentan sunt în modul de test. Pentru răspunsuri AI complete, vei avea nevoie de un API key de la Claude sau OpenAI când Cloudflare se repară în București.`
+        }
       }]
     };
     
     res.status(200).json(response);
   } catch (error) {
+    console.error('Error:', error);
     res.status(500).json({ error: error.message });
   }
 }
