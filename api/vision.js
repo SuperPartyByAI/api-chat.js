@@ -1,110 +1,76 @@
-// /api/vision.js - OpenAI Vision Endpoint pentru Vercel
-
 export default async function handler(req, res) {
-  // Configurare CORS pentru frontend-ul tău
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', 'https://superpartybyai.ro');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
-
-  // Handle preflight OPTIONS request
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
-  // Verifică că e POST request
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    // Obține API key din environment variables
-    const apiKey = process.env.OPENAI_API_KEY;
-    
-    if (!apiKey) {
-      console.error('OPENAI_API_KEY not found in environment variables');
-      return res.status(500).json({ 
-        error: 'OpenAI API key not configured',
-        details: 'Server configuration error - missing API key'
-      });
-    }
+    const { image, mimeType } = req.body;
 
-    // Preia imaginea și prompt-ul din request body
-    const { image, prompt } = req.body;
-    
-    if (!image) {
-      return res.status(400).json({ 
-        error: 'Invalid request',
-        details: 'Image data is required'
-      });
-    }
-
-    // Pregătește mesajul pentru Vision API
-    const messages = [
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: prompt || "Analizează această imagine și extrage toate informațiile relevante pentru un formular de eveniment (nume, telefon, adresă, data, ora, vârstă, tip eveniment, observații)."
-          },
-          {
-            type: "image_url",
-            image_url: {
-              url: image // Data URL sau URL către imagine
-            }
-          }
-        ]
-      }
-    ];
-
-    console.log('Making OpenAI Vision API request');
-
-    // Trimite request către OpenAI Vision
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}` // IMPORTANT: Format corect cu "Bearer "
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini', // Model Vision (gpt-4o, gpt-4o-mini, gpt-4-turbo)
-        messages: messages,
-        max_tokens: 1000
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4096,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: mimeType,
+                data: image
+              }
+            },
+            {
+              type: 'text',
+              text: `Analizează această poză de contract/formular SuperParty și extrage informațiile în format JSON strict:
+
+{
+  "numeClient": "Nume complet client",
+  "telefon": "Număr telefon",
+  "dataEveniment": "Data în format DD.MM.YYYY",
+  "oraStart": "Ora start (HH:MM)",
+  "durataOre": "Număr ore (doar cifra)",
+  "adresa": "Adresa completă eveniment",
+  "personaj": "Personaj comandat",
+  "varstaAniversar": "Vârsta copilului",
+  "numeAniversar": "Numele copilului",
+  "pretTotal": "Preț total (doar cifra)",
+  "avans": "Avans plătit (doar cifra)",
+  "observatii": "Orice observații suplimentare"
+}
+
+IMPORTANT: Returnează DOAR JSON-ul, fără text explicativ înaintea sau după el.`
+            }
+          ]
+        }]
       })
     });
 
-    // Verifică răspunsul OpenAI
-    if (!openaiResponse.ok) {
-      const errorData = await openaiResponse.json();
-      console.error('OpenAI Vision API Error:', errorData);
-      
-      return res.status(openaiResponse.status).json({
-        error: 'OpenAI Vision API error',
-        details: errorData.error?.message || 'Unknown error',
-        status: openaiResponse.status
-      });
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'API request failed');
     }
 
-    // Parse răspunsul
-    const data = await openaiResponse.json();
-    
-    // Extrage analiza imaginii
-    const analysis = data.choices[0].message.content;
-
-    // Returnează răspunsul
-    return res.status(200).json({
-      success: true,
-      analysis: analysis,
-      usage: data.usage // Include și info despre tokens folosiți
-    });
-
+    res.status(200).json(data);
   } catch (error) {
-    console.error('Server error:', error);
-    return res.status(500).json({
-      error: 'Server error',
-      details: error.message
-    });
+    console.error('Vision error:', error);
+    res.status(500).json({ error: error.message });
   }
 }
