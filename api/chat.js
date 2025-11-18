@@ -6,7 +6,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export default async function handler(req, res) {
-  // CORS headers
+  // CORS headers - IMPORTANT!
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -77,8 +77,8 @@ export default async function handler(req, res) {
     
     console.log('🌐 Using general knowledge...');
     
-    // Generate general response (mock for now - you can integrate OpenAI/Claude API here)
-    const generalAnswer = `Bună! Îmi pare rău, dar nu am informații specifice despre "${userQuestion}" în baza mea de cunoștințe SuperParty.\n\n💡 **Sfat:** Contactează echipa SuperParty pentru detalii exacte!\n\n📞 **Contact:**\n- Telefon: [număr telefon]\n- Email: [email]\n- Website: superpartybyai.ro`;
+    // Generate general response
+    const generalAnswer = `Bună! Îmi pare rău, dar nu am informații specifice despre "${lastMessage.content}" în baza mea de cunoștințe SuperParty.\n\n💡 **Sfat:** Contactează echipa SuperParty pentru detalii exacte!\n\n📞 **Contact:**\n- Telefon: 0728 242 214\n- Email: contact@superparty.ro\n- Website: superpartybyai.ro`;
     
     // ============================================
     // STEP 4: Log unanswered question
