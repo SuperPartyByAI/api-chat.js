@@ -6,7 +6,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export default async function handler(req, res) {
-  // CORS headers - IMPORTANT!
+  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -26,15 +26,10 @@ export default async function handler(req, res) {
     
     console.log('🔍 Searching Knowledge Base for:', userQuestion);
     
-    // ============================================
-    // STEP 1: Search in Knowledge Base
-    // ============================================
-    
     let knowledgeFound = false;
     let kbAnswer = null;
     
     try {
-      // Search for exact or partial matches in knowledge base
       const { data: kbResults, error: kbError } = await supabase
         .from('knowledge_base')
         .select('*')
@@ -43,7 +38,6 @@ export default async function handler(req, res) {
       if (kbError) {
         console.error('❌ KB Search Error:', kbError);
       } else if (kbResults && kbResults.length > 0) {
-        // Found in Knowledge Base!
         knowledgeFound = true;
         kbAnswer = kbResults[0].answer;
         console.log('✅ Found in Knowledge Base!');
@@ -53,10 +47,6 @@ export default async function handler(req, res) {
     } catch (error) {
       console.error('❌ KB Search Exception:', error);
     }
-    
-    // ============================================
-    // STEP 2: If found in KB, return it
-    // ============================================
     
     if (knowledgeFound && kbAnswer) {
       const response = {
@@ -71,18 +61,9 @@ export default async function handler(req, res) {
       return res.status(200).json(response);
     }
     
-    // ============================================
-    // STEP 3: Not in KB - use general knowledge
-    // ============================================
-    
     console.log('🌐 Using general knowledge...');
     
-    // Generate general response
     const generalAnswer = `Bună! Îmi pare rău, dar nu am informații specifice despre "${lastMessage.content}" în baza mea de cunoștințe SuperParty.\n\n💡 **Sfat:** Contactează echipa SuperParty pentru detalii exacte!\n\n📞 **Contact:**\n- Telefon: 0728 242 214\n- Email: contact@superparty.ro\n- Website: superpartybyai.ro`;
-    
-    // ============================================
-    // STEP 4: Log unanswered question
-    // ============================================
     
     try {
       const { error: logError } = await supabase
@@ -103,10 +84,6 @@ export default async function handler(req, res) {
     } catch (error) {
       console.error('❌ Exception logging question:', error);
     }
-    
-    // ============================================
-    // STEP 5: Return general response
-    // ============================================
     
     const response = {
       choices: [{
