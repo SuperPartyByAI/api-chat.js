@@ -1,0 +1,8 @@
+{
+  "name": "api-chat-backend",
+  "version": "1.0.0",
+  "description": "SuperParty AI Chat Backend with Knowledge Base",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}
