@@ -107,5 +107,6 @@ export default async function handler(req, res) {
       }]
     });
   }
-}
+}// Force redeploy - fix CORS
+
  
