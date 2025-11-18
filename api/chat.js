@@ -6,7 +6,6 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export default async function handler(req, res) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -22,11 +21,7 @@ export default async function handler(req, res) {
   try {
     const { messages, userId, sessionId } = req.body;
     const lastMessage = messages[messages.length - 1];
-    const userQuestion = lastMessage.content.toLowerCase().trim();
     
-    console.log('🔍 Searching Knowledge Base for:', userQuestion);
-    
-    // Salvează întrebarea în unanswered_questions
     try {
       await supabase
         .from('unanswered_questions')
@@ -37,16 +32,14 @@ export default async function handler(req, res) {
           answered: false,
           added_to_kb: false
         });
-      console.log('✅ Question saved to unanswered_questions');
     } catch (error) {
-      console.error('❌ Failed to save question:', error);
+      console.error('Failed to save question:', error);
     }
     
-    // Răspuns general (deocamdată fără Knowledge Base)
     const response = {
       choices: [{
         message: {
-          content: `Bună! Am primit mesajul tău: "${lastMessage.content}"\n\n✅ Întrebarea ta a fost salvată!\n\n💡 Momentan răspund cu mesaje de test. Pentru răspunsuri complete, contactează echipa SuperParty:\n\n📞 Telefon: 0728 242 214\n📧 Email: contact@superparty.ro\n🌐 Website: superpartybyai.ro`
+          content: `Bună! Îmi pare rău, dar nu am informații specifice despre "${lastMessage.content}" în baza mea de cunoștințe.\n\n💡 Pentru detalii exacte, contactează echipa SuperParty:\n\n📞 Telefon: 0728 242 214\n📧 Email: contact@superparty.ro\n🌐 Website: superpartybyai.ro`
         }
       }]
     };
@@ -54,9 +47,7 @@ export default async function handler(req, res) {
     return res.status(200).json(response);
     
   } catch (error) {
-    console.error('❌ Error:', error);
     return res.status(500).json({ 
-      error: error.message,
       choices: [{
         message: {
           content: '❌ A apărut o eroare tehnică. Te rog încearcă din nou!'
@@ -65,3 +56,10 @@ export default async function handler(req, res) {
     });
   }
 }
+```
+
+---
+
+**Copiază TOT codul de mai sus, deschide:**
+```
+https://github.com/SuperPartyByAI/api-chat.js/edit/main/api/chat.js
